@@ -239,17 +239,29 @@ class TwitterExtractor(Extractor):
         my_user = None
         if "author" in tweet:
             author = tweet["author"]
-                if "core" in tweet:
-                    my_user = tweet["core"]["user_results"]["result"]
-                    my_user = self._transform_user(my_user)
+            if "core" in tweet:
+                my_user = tweet["core"]["user_results"]["result"]
+                my_user = self._transform_user(my_user)
         elif "core" in tweet:
             author = tweet["core"]["user_results"]["result"]
         else:
             author = tweet["user"]
         author = self._transform_user(author)
 
+
         if "legacy" in tweet:
             tweet = tweet["legacy"]
+
+        if "retweeted_status_result" in tweet:
+            retweet = tweet["retweeted_status_result"]["result"]
+            if "tweet" in retweet:
+                retweet = retweet["tweet"]
+            if "legacy" in retweet:
+                retweet = retweet["legacy"]
+            if "created_at" in retweet:
+                original_date = retweet["created_at"]
+        else:
+            original_date = tweet["created_at"]
 
         tget = tweet.get
         entities = tweet["entities"]
@@ -263,6 +275,8 @@ class TwitterExtractor(Extractor):
                 tget("in_reply_to_status_id_str")),
             "date"          : text.parse_datetime(
                 tweet["created_at"], "%a %b %d %H:%M:%S %z %Y"),
+            "original_date" : text.parse_datetime(
+                original_date, "%a %b %d %H:%M:%S %z %Y"),
             "user"          : self._user or my_user or author,
             "author"        : author,
             "lang"          : tweet["lang"],
