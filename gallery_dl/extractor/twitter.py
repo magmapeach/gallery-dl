@@ -236,8 +236,12 @@ class TwitterExtractor(Extractor):
                 files.append({"url": url})
 
     def _transform_tweet(self, tweet):
+        my_user = None
         if "author" in tweet:
             author = tweet["author"]
+                if "core" in tweet:
+                    my_user = tweet["core"]["user_results"]["result"]
+                    my_user = self._transform_user(my_user)
         elif "core" in tweet:
             author = tweet["core"]["user_results"]["result"]
         else:
@@ -259,7 +263,7 @@ class TwitterExtractor(Extractor):
                 tget("in_reply_to_status_id_str")),
             "date"          : text.parse_datetime(
                 tweet["created_at"], "%a %b %d %H:%M:%S %z %Y"),
-            "user"          : self._user or author,
+            "user"          : self._user or my_user or author,
             "author"        : author,
             "lang"          : tweet["lang"],
             "favorite_count": tget("favorite_count"),
